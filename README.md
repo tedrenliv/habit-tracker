@@ -86,15 +86,61 @@ For quick demos or sharing without Node.js:
 - **Vite** - Build tool with hot reload
 - **PostCSS** - CSS processing
 
-## Mock Data
+## Backend Integration
 
-The application includes pre-configured mock data:
+### Quick Start
+
+Ready to add persistent data storage? Follow the 15-minute setup:
+
+**[👉 Backend Quick Start Guide](./BACKEND_QUICK_START.md)**
+
+### Deployment Status
+
+- ✅ **Frontend**: Live on Vercel
+  - URL: https://habit-tracker-iota-sepia.vercel.app
+  - Auto-deploys from GitHub
+
+- ✅ **Serverless API**: Ready (with example functions in `api/`)
+  - GET/POST/PUT/DELETE habits
+  - GET achievements
+  - GET/POST daily check-ins
+
+- ⭐ **Supabase Database**: Recommended for data persistence
+  - PostgreSQL-based
+  - Real-time subscriptions
+  - Row-level security
+  - Free tier available
+
+### Guides
+
+| Guide | Purpose |
+|-------|---------|
+| [Backend Quick Start](./BACKEND_QUICK_START.md) | 15-minute setup with Supabase |
+| [Backend Integration](./BACKEND_INTEGRATION.md) | Complete API & database guide |
+| [Supabase Setup](./SUPABASE_SETUP.md) | Detailed Supabase configuration |
+
+### Architecture
+
+```
+Frontend (React)
+    ↓
+Vercel Serverless APIs (/api/*)
+    ↓
+Supabase PostgreSQL
+```
+
+### Default Behavior
+
+- Without Supabase: Uses mock data (resets on page refresh)
+- With Supabase: Data persists and syncs across devices
+
+### Mock Data
+
+The application includes pre-configured mock data as fallback:
 
 - 4 sample habits (Morning Run, Meditation, Reading, Fitness)
 - 6 achievements with unlock progress
 - 90 days of history for analytics
-
-Future versions will connect to a backend API for data persistence.
 
 ## Browser Support
 
