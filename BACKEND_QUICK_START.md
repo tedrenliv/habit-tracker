@@ -157,7 +157,7 @@ Supabase automatically backs up daily. To manually backup:
 
 ### CORS Errors
 - In Supabase: Settings → API → CORS
-- Add your Vercel domain: `https://habit-tracker-xxx.vercel.app`
+- Add your custom domain: `https://aithinking.uk` (or your Vercel default domain)
 
 ## Next Steps
 

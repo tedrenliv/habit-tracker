@@ -76,7 +76,7 @@ JWT_SECRET=your-secret-key
 |----------|-------|-------|
 | `VITE_SUPABASE_URL` | `https://your-project.supabase.co` | Production, Preview, Development |
 | `VITE_SUPABASE_ANON_KEY` | Your Supabase anon key | Production, Preview, Development |
-| `VITE_API_URL` | `https://habit-tracker-xxx.vercel.app/api` | Production |
+| `VITE_API_URL` | `https://aithinking.uk/api` | Production |
 | `DATABASE_URL` | Your database connection string | Production |
 
 ## Setup Instructions
@@ -134,8 +134,8 @@ git push
 
 ## API Endpoints
 
-All endpoints are available at your Vercel deployment URL:
-`https://habit-tracker-xxx.vercel.app/api/`
+All endpoints are available at your deployment URL:
+`https://aithinking.uk/api/`
 
 ### Habits Endpoint
 
@@ -144,7 +144,7 @@ All endpoints are available at your Vercel deployment URL:
 - Response: List of habits for the user
 
 ```bash
-curl "https://habit-tracker-xxx.vercel.app/api/habits?userId=user123"
+curl "https://aithinking.uk/api/habits?userId=user123"
 ```
 
 **POST** `/api/habits`
@@ -152,7 +152,7 @@ curl "https://habit-tracker-xxx.vercel.app/api/habits?userId=user123"
 - Response: Created habit object
 
 ```bash
-curl -X POST https://habit-tracker-xxx.vercel.app/api/habits \
+curl -X POST https://aithinking.uk/api/habits \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",
@@ -177,7 +177,7 @@ curl -X POST https://habit-tracker-xxx.vercel.app/api/habits \
 - Response: List of achievements with unlock status
 
 ```bash
-curl "https://habit-tracker-xxx.vercel.app/api/achievements?userId=user123"
+curl "https://aithinking.uk/api/achievements?userId=user123"
 ```
 
 ### Daily Data Endpoint
@@ -187,7 +187,7 @@ curl "https://habit-tracker-xxx.vercel.app/api/achievements?userId=user123"
 - Response: Daily check-in data
 
 ```bash
-curl "https://habit-tracker-xxx.vercel.app/api/daily-data?userId=user123&startDate=2026-01-01&endDate=2026-02-04"
+curl "https://aithinking.uk/api/daily-data?userId=user123&startDate=2026-01-01&endDate=2026-02-04"
 ```
 
 **POST** `/api/daily-data`
@@ -195,7 +195,7 @@ curl "https://habit-tracker-xxx.vercel.app/api/daily-data?userId=user123&startDa
 - Response: Saved check-in
 
 ```bash
-curl -X POST https://habit-tracker-xxx.vercel.app/api/daily-data \
+curl -X POST https://aithinking.uk/api/daily-data \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "user123",

@@ -97,7 +97,8 @@ Ready to add persistent data storage? Follow the 15-minute setup:
 ### Deployment Status
 
 - ✅ **Frontend**: Live on Vercel
-  - URL: https://habit-tracker-iota-sepia.vercel.app
+  - Custom Domain: https://aithinking.uk
+  - Vercel URL: https://habit-tracker-iota-sepia.vercel.app
   - Auto-deploys from GitHub
 
 - ✅ **Serverless API**: Ready (with example functions in `api/`)
@@ -145,7 +146,8 @@ The application includes pre-configured mock data as fallback:
 ## Version History
 
 ### v0.2.0 - Backend Integration (February 2026)
-- ✅ **Deployed to Vercel** at https://habit-tracker-iota-sepia.vercel.app
+- ✅ **Deployed to Vercel** at https://aithinking.uk (custom domain)
+- ✅ **Default Vercel URL** also available at https://habit-tracker-iota-sepia.vercel.app
 - ✅ **Supabase Integration**: Connected to PostgreSQL database with real-time support
 - ✅ **Serverless API Endpoints**:
   - `/api/habits` - Full CRUD operations for habits
