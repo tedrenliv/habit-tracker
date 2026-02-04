@@ -96,10 +96,11 @@ Ready to add persistent data storage? Follow the 15-minute setup:
 
 ### Deployment Status
 
-- ✅ **Frontend**: Live on Vercel
-  - Custom Domain: https://aithinking.uk
-  - Vercel URL: https://habit-tracker-iota-sepia.vercel.app
-  - Auto-deploys from GitHub
+- ✅ **Frontend**: Live on Vercel with Custom Domain
+  - **Primary Domain**: https://aithinking.uk (Active ✨)
+  - **Vercel URL**: https://habit-tracker-iota-sepia.vercel.app (backup)
+  - **DNS**: A record configured (216.198.79.1)
+  - **Auto-deploys**: Push to GitHub → Automatic deployment
 
 - ✅ **Serverless API**: Ready (with example functions in `api/`)
   - GET/POST/PUT/DELETE habits
@@ -111,6 +112,22 @@ Ready to add persistent data storage? Follow the 15-minute setup:
   - Real-time subscriptions
   - Row-level security
   - Free tier available
+
+### Custom Domain Configuration
+
+The application is accessible via custom domain **https://aithinking.uk** with the following DNS setup:
+
+**DNS Records (Squarespace):**
+- Type: A
+- Host: @ (root domain)
+- Value: 216.198.79.1
+- TTL: 3600
+
+**To set up a custom domain for your own deployment:**
+1. Add your domain to Vercel project settings
+2. Update your DNS provider with the A record provided by Vercel
+3. Wait 5-30 minutes for DNS propagation
+4. Verify domain is active in Vercel dashboard
 
 ### Guides
 
@@ -145,8 +162,9 @@ The application includes pre-configured mock data as fallback:
 
 ## Version History
 
-### v0.2.0 - Backend Integration (February 2026)
-- ✅ **Deployed to Vercel** at https://aithinking.uk (custom domain)
+### v0.2.0 - Backend Integration & Custom Domain (February 2026)
+- ✅ **Deployed to Vercel** with custom domain https://aithinking.uk (Active ✨)
+- ✅ **DNS Configuration**: A record (216.198.79.1) set up on Squarespace
 - ✅ **Default Vercel URL** also available at https://habit-tracker-iota-sepia.vercel.app
 - ✅ **Supabase Integration**: Connected to PostgreSQL database with real-time support
 - ✅ **Serverless API Endpoints**:
