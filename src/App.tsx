@@ -76,9 +76,10 @@ const Navigation = ({ currentPage, setCurrentPage }) => {
 };
 
 // 今日打卡页面
-const TodayPage = ({ habits, dailyData, onHabitToggle }) => {
+const TodayPage = ({ habits, dailyData, onHabitToggle, onAddHabit }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddHabit, setShowAddHabit] = useState(false);
+  const [newHabitName, setNewHabitName] = useState('');
 
   const completedCount = dailyData.today.filter((d) => d.completed).length;
   const totalCount = dailyData.today.length;
@@ -187,9 +188,20 @@ const TodayPage = ({ habits, dailyData, onHabitToggle }) => {
           <input
             type="text"
             placeholder="输入习惯名称..."
+            value={newHabitName}
+            onChange={(e) => setNewHabitName(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          <button className="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600">
+          <button
+            onClick={() => {
+              if (newHabitName.trim()) {
+                onAddHabit(newHabitName);
+                setNewHabitName('');
+                setShowAddHabit(false);
+              }
+            }}
+            className="w-full bg-blue-500 text-white py-2 rounded-lg font-semibold hover:bg-blue-600"
+          >
             创建
           </button>
         </div>
@@ -371,6 +383,25 @@ export default function HabitTracker() {
     }));
   };
 
+  const handleAddHabit = (habitName) => {
+    const newHabit = {
+      id: Math.max(...habits.map((h) => h.id), 0) + 1,
+      name: habitName,
+      icon: '✨',
+      color: '#' + Math.floor(Math.random() * 16777215).toString(16),
+      reminder: '09:00',
+      frequency: 'daily',
+      streak: 0,
+      totalDone: 0,
+      createdAt: new Date().toISOString().split('T')[0],
+    };
+    setHabits([...habits, newHabit]);
+    setDailyData((prev) => ({
+      ...prev,
+      today: [...prev.today, { habitId: newHabit.id, completed: false }],
+    }));
+  };
+
   return (
     <div className="flex flex-col-reverse md:flex-row h-screen bg-gray-50 font-sans">
       {/* 导航栏 */}
@@ -379,7 +410,7 @@ export default function HabitTracker() {
       {/* 主内容区域 */}
       <main className="flex-1 overflow-auto md:max-h-screen md:overflow-y-auto">
         {currentPage === 'today' && (
-          <TodayPage habits={habits} dailyData={dailyData} onHabitToggle={handleHabitToggle} />
+          <TodayPage habits={habits} dailyData={dailyData} onHabitToggle={handleHabitToggle} onAddHabit={handleAddHabit} />
         )}
         {currentPage === 'analytics' && <AnalyticsPage habits={habits} mockDailyData={dailyData} />}
         {currentPage === 'achievements' && <AchievementsPage achievements={mockAchievements} />}
