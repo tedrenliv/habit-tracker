@@ -4,7 +4,9 @@ A beautiful, responsive habit tracking application with analytics and achievemen
 
 ## Features
 
+- **User Authentication**: Sign up / sign in / sign out via Supabase Auth
 - **Today's Tracking**: Daily habit check-in with progress visualization
+- **Add & Delete Habits**: Create new habits and remove ones you no longer need
 - **Analytics Dashboard**: Detailed statistics including:
   - Longest streak tracking
   - Average completion rate
@@ -15,6 +17,7 @@ A beautiful, responsive habit tracking application with analytics and achievemen
 - **Achievement System**: Unlock achievements as you build consistency
 - **Responsive Design**: Works seamlessly on mobile and desktop
 - **Real-time Updates**: Instant feedback on habit completion
+- **Data Persistence**: Supabase backend with graceful fallback to local state
 
 ## Project Structure
 
@@ -22,8 +25,16 @@ A beautiful, responsive habit tracking application with analytics and achievemen
 habit-tracker/
 ├── src/
 │   ├── main.tsx              # React entry point
-│   ├── App.tsx               # Main application component
-│   └── index.css             # Global styles with Tailwind
+│   ├── App.tsx               # Main application component (auth, habits, analytics, achievements)
+│   ├── index.css             # Global styles with Tailwind
+│   └── lib/
+│       ├── supabase.ts       # Supabase client, auth & data helper functions
+│       ├── haptics.ts        # Native haptic feedback (Capacitor)
+│       └── notifications.ts  # Native push notifications (Capacitor)
+├── api/                      # Vercel serverless functions
+│   ├── habits.ts             # GET/POST/PUT/DELETE habits
+│   ├── achievements.ts       # GET achievements
+│   └── daily-data.ts         # GET/POST daily check-ins
 ├── index.html                # HTML template
 ├── package.json              # Dependencies and scripts
 ├── vite.config.ts            # Vite configuration
@@ -85,6 +96,8 @@ For quick demos or sharing without Node.js:
 - **Lucide React** - Icon library
 - **Vite** - Build tool with hot reload
 - **PostCSS** - CSS processing
+- **Supabase** - Authentication & PostgreSQL database
+- **Capacitor** - Native mobile features (haptics, notifications)
 
 ## Backend Integration
 
@@ -162,6 +175,16 @@ The application includes pre-configured mock data as fallback:
 
 ## Version History
 
+### v0.3.0 - User Authentication & Habit Management (February 2026)
+- ✅ **User Authentication**: Sign up, sign in, sign out via Supabase Auth
+- ✅ **Auth UI**: Login/register page with email + password, error handling, Chinese UI
+- ✅ **Add Habits**: Create custom habits from the Today page
+- ✅ **Delete Habits**: Remove habits with trash icon button on each card
+- ✅ **Default Starter Habits**: New users get 4 default habits automatically
+- ✅ **Graceful Fallback**: App works with local state when Supabase tables don't exist
+- ✅ **Logout**: Dedicated logout button in navigation
+- ✅ **NaN% Fix**: Fixed division-by-zero when no habits exist
+
 ### v0.2.0 - Backend Integration & Custom Domain (February 2026)
 - ✅ **Deployed to Vercel** with custom domain https://aithinking.uk (Active ✨)
 - ✅ **DNS Configuration**: A record (216.198.79.1) set up on Squarespace
@@ -200,11 +223,12 @@ The application includes pre-configured mock data as fallback:
 
 ## Roadmap - Upcoming Features
 
-### Phase 3: Enhanced User Experience
-- 🔐 **User Authentication** - Supabase Auth with sign up/login
+### Phase 4: Enhanced User Experience
 - 📱 **Real-time Sync** - Cross-device synchronization
 - 🎯 **Performance Optimization** - Query optimization, caching
 - 📊 **Analytics Tracking** - User behavior and usage insights
+- 🔔 **Push Notifications** - Habit reminders via native notifications
+- 🎨 **Custom Habit Icons** - Choose emoji/icon when creating habits
 
 ## Browser Support
 

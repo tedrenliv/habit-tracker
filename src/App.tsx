@@ -1,5 +1,13 @@
-import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Settings, Trash2, Archive, Bell, RotateCw, Calendar, TrendingUp, Star, Lock, Unlock } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Plus, Settings, Trash2, Archive, Bell, RotateCw, Calendar, TrendingUp, Star, Lock, Unlock, LogOut } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { celebrateCompletion } from './lib/haptics';
+import { scheduleHabitReminder, requestNotificationPermissions } from './lib/notifications';
+import {
+  signUp, signIn, signOut, onAuthStateChange,
+  fetchHabits, createHabit, deleteHabit, saveDailyCheckIn, fetchDailyData, fetchAchievements,
+  isSupabaseConfigured,
+} from './lib/supabase';
 
 // Mock data
 const mockHabits = [
@@ -47,8 +55,118 @@ const generateMockChartData = (habitId) => {
   return data;
 };
 
+// 登录/注册页面
+const AuthPage = ({ onAuth }) => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    setLoading(true);
+
+    try {
+      if (isLogin) {
+        const { error } = await signIn(email, password);
+        if (error) setError(error.message);
+      } else {
+        if (password.length < 6) {
+          setError('密码至少需要6个字符');
+          setLoading(false);
+          return;
+        }
+        const { data, error } = await signUp(email, password);
+        if (error) {
+          setError(error.message);
+        } else if (data?.user?.identities?.length === 0) {
+          setError('该邮箱已被注册');
+        } else if (data?.session) {
+          // Auto-confirmed: session exists, onAuthStateChange will handle redirect
+        } else {
+          setSuccess('注册成功！请查看邮箱并点击确认链接，然后返回登录。');
+        }
+      }
+    } catch (err) {
+      setError('发生未知错误，请重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">习惯追踪器</h1>
+          <p className="text-gray-500">{isLogin ? '登录你的账户' : '创建新账户'}</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="your@email.com"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">密码</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder={isLogin ? '输入密码' : '至少6个字符'}
+            />
+          </div>
+
+          {error && (
+            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 text-green-600 text-sm p-3 rounded-lg">
+              {success}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50"
+          >
+            {loading ? '请稍候...' : isLogin ? '登录' : '注册'}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center">
+          <button
+            onClick={() => { setIsLogin(!isLogin); setError(''); setSuccess(''); }}
+            className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+          >
+            {isLogin ? '没有账户？立即注册' : '已有账户？立即登录'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // 导航栏组件
-const Navigation = ({ currentPage, setCurrentPage }) => {
+const Navigation = ({ currentPage, setCurrentPage, onLogout }) => {
   const navItems = [
     { key: 'today', label: '今日打卡', icon: '📋' },
     { key: 'analytics', label: '统计分析', icon: '📊' },
@@ -71,19 +189,26 @@ const Navigation = ({ currentPage, setCurrentPage }) => {
           <span className="text-xs md:text-sm font-medium">{item.label}</span>
         </button>
       ))}
+      <button
+        onClick={onLogout}
+        className="flex flex-col md:flex-row md:items-center md:gap-3 py-2 px-3 rounded-lg transition-all duration-200 text-gray-600 hover:text-red-600 hover:bg-red-50 md:mt-auto"
+      >
+        <LogOut size={20} />
+        <span className="text-xs md:text-sm font-medium">退出</span>
+      </button>
     </nav>
   );
 };
 
 // 今日打卡页面
-const TodayPage = ({ habits, dailyData, onHabitToggle, onAddHabit }) => {
+const TodayPage = ({ habits, dailyData, onHabitToggle, onAddHabit, onDeleteHabit }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showAddHabit, setShowAddHabit] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
 
   const completedCount = dailyData.today.filter((d) => d.completed).length;
   const totalCount = dailyData.today.length;
-  const completionRate = Math.round((completedCount / totalCount) * 100);
+  const completionRate = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   const handlePrevDay = () => {
     const newDate = new Date(selectedDate);
@@ -166,6 +291,13 @@ const TodayPage = ({ habits, dailyData, onHabitToggle, onAddHabit }) => {
                 <p className="text-sm font-bold text-gray-900">{habit.streak}天</p>
                 <p className="text-xs text-gray-500">连续</p>
               </div>
+              <button
+                onClick={() => onDeleteHabit(habit.id)}
+                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                title="删除习惯"
+              >
+                <Trash2 size={16} />
+              </button>
             </div>
           );
         })}
@@ -372,45 +504,213 @@ const AchievementsPage = ({ achievements }) => {
 
 // 主应用
 export default function HabitTracker() {
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState('today');
   const [habits, setHabits] = useState(mockHabits);
   const [dailyData, setDailyData] = useState(mockDailyData);
 
-  const handleHabitToggle = (habitId) => {
+  // Listen for auth state changes
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      setAuthLoading(false);
+      return;
+    }
+
+    const subscription = onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  // Load data from Supabase when user logs in
+  useEffect(() => {
+    if (!user) return;
+
+    const loadData = async () => {
+      // Load habits
+      const { data: habitsData } = await fetchHabits(user.id);
+      if (habitsData && habitsData.length > 0) {
+        const mapped = habitsData.map((h, i) => ({
+          id: h.id,
+          name: h.name,
+          icon: h.emoji || '✨',
+          color: ['#FF6B6B', '#4ECDC4', '#95E1D3', '#F38181', '#A8E6CF', '#FFD93D'][i % 6],
+          reminder: h.reminder || '09:00',
+          frequency: 'daily',
+          streak: h.streak || 0,
+          totalDone: h.streak || 0,
+          createdAt: h.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+        }));
+        setHabits(mapped);
+        setDailyData((prev) => ({
+          ...prev,
+          today: mapped.map((h) => ({ habitId: h.id, completed: false })),
+        }));
+      } else {
+        // New user: create default starter habits
+        const defaultHabits = [
+          { name: '晨跑', emoji: '🏃', reminder: '06:00' },
+          { name: '冥想', emoji: '🧘', reminder: '21:00' },
+          { name: '阅读', emoji: '📚', reminder: '20:00' },
+          { name: '健身', emoji: '💪', reminder: '18:00' },
+        ];
+        const colors = ['#FF6B6B', '#4ECDC4', '#95E1D3', '#F38181'];
+        const created = [];
+        for (const h of defaultHabits) {
+          const { data } = await createHabit(user.id, h.name, h.emoji, h.reminder);
+          if (data) {
+            created.push(Array.isArray(data) ? data[0] : data);
+          }
+        }
+        if (created.length > 0) {
+          const mapped = created.map((h, i) => ({
+            id: h.id,
+            name: h.name,
+            icon: h.emoji || defaultHabits[i].emoji,
+            color: colors[i % colors.length],
+            reminder: h.reminder || defaultHabits[i].reminder,
+            frequency: 'daily',
+            streak: 0,
+            totalDone: 0,
+            createdAt: new Date().toISOString().split('T')[0],
+          }));
+          setHabits(mapped);
+          setDailyData((prev) => ({
+            ...prev,
+            today: mapped.map((h) => ({ habitId: h.id, completed: false })),
+          }));
+        } else {
+          // Supabase tables may not exist yet, fall back to mock data
+          setHabits(mockHabits);
+          setDailyData(mockDailyData);
+        }
+      }
+    };
+
+    loadData();
+  }, [user]);
+
+  // Initialize native features on mount
+  useEffect(() => {
+    const initializeNativeFeatures = async () => {
+      if (Capacitor.isNativePlatform()) {
+        const hasPermission = await requestNotificationPermissions();
+
+        if (hasPermission) {
+          habits.forEach(habit => {
+            if (habit.reminder) {
+              scheduleHabitReminder(
+                habit.id.toString(),
+                habit.name,
+                habit.icon,
+                habit.reminder
+              );
+            }
+          });
+        }
+      }
+    };
+
+    initializeNativeFeatures();
+  }, [habits]);
+
+  const handleHabitToggle = async (habitId) => {
+    const daily = dailyData.today.find((d) => d.habitId === habitId);
+    const newCompleted = !daily?.completed;
+
     setDailyData((prev) => ({
       ...prev,
-      today: prev.today.map((d) => (d.habitId === habitId ? { ...d, completed: !d.completed } : d)),
+      today: prev.today.map((d) => (d.habitId === habitId ? { ...d, completed: newCompleted } : d)),
     }));
+
+    // Persist to Supabase
+    if (user) {
+      saveDailyCheckIn(user.id, String(habitId), newCompleted);
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      await celebrateCompletion();
+    }
   };
 
-  const handleAddHabit = (habitName) => {
+  const handleAddHabit = async (habitName) => {
+    let newHabitId = Date.now();
+
+    // Try to persist to Supabase if user is logged in
+    if (user) {
+      const { data } = await createHabit(user.id, habitName, '✨', '09:00');
+      if (data) {
+        const created = Array.isArray(data) ? data[0] : data;
+        newHabitId = created.id;
+      }
+    }
+
+    // Always add to local state
     const newHabit = {
-      id: Math.max(...habits.map((h) => h.id), 0) + 1,
+      id: newHabitId,
       name: habitName,
       icon: '✨',
-      color: '#' + Math.floor(Math.random() * 16777215).toString(16),
+      color: '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'),
       reminder: '09:00',
       frequency: 'daily',
       streak: 0,
       totalDone: 0,
       createdAt: new Date().toISOString().split('T')[0],
     };
-    setHabits([...habits, newHabit]);
+    setHabits((prev) => [...prev, newHabit]);
     setDailyData((prev) => ({
       ...prev,
       today: [...prev.today, { habitId: newHabit.id, completed: false }],
     }));
   };
 
+  const handleDeleteHabit = async (habitId) => {
+    setHabits((prev) => prev.filter((h) => h.id !== habitId));
+    setDailyData((prev) => ({
+      ...prev,
+      today: prev.today.filter((d) => d.habitId !== habitId),
+    }));
+
+    if (user) {
+      deleteHabit(String(habitId));
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut();
+    setUser(null);
+    setHabits(mockHabits);
+    setDailyData(mockDailyData);
+  };
+
+  // Show loading spinner while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+        <div className="text-white text-xl font-semibold">加载中...</div>
+      </div>
+    );
+  }
+
+  // Show auth page if Supabase is configured but user is not logged in
+  if (isSupabaseConfigured && !user) {
+    return <AuthPage onAuth={setUser} />;
+  }
+
   return (
     <div className="flex flex-col-reverse md:flex-row h-screen bg-gray-50 font-sans">
       {/* 导航栏 */}
-      <Navigation currentPage={currentPage} setCurrentPage={setCurrentPage} />
+      <Navigation currentPage={currentPage} setCurrentPage={setCurrentPage} onLogout={handleLogout} />
 
       {/* 主内容区域 */}
       <main className="flex-1 overflow-auto md:max-h-screen md:overflow-y-auto">
         {currentPage === 'today' && (
-          <TodayPage habits={habits} dailyData={dailyData} onHabitToggle={handleHabitToggle} onAddHabit={handleAddHabit} />
+          <TodayPage habits={habits} dailyData={dailyData} onHabitToggle={handleHabitToggle} onAddHabit={handleAddHabit} onDeleteHabit={handleDeleteHabit} />
         )}
         {currentPage === 'analytics' && <AnalyticsPage habits={habits} mockDailyData={dailyData} />}
         {currentPage === 'achievements' && <AchievementsPage achievements={mockAchievements} />}

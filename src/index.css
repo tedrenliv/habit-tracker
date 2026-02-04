@@ -20,3 +20,15 @@ body {
 #root {
   height: 100%;
 }
+
+/* Dark mode support for iOS */
+@media (prefers-color-scheme: dark) {
+  html, body {
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+
+  #root {
+    background-color: #1a1a1a;
+  }
+}

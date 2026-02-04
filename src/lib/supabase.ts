@@ -228,3 +228,49 @@ export function subscribeToHabitChanges(userId: string, callback: () => void) {
     )
     .subscribe()
 }
+
+/**
+ * Sign up a new user
+ */
+export async function signUp(email: string, password: string) {
+  if (!supabase) {
+    return { data: null, error: { message: 'Supabase is not configured' } }
+  }
+  return await supabase.auth.signUp({ email, password })
+}
+
+/**
+ * Sign in an existing user
+ */
+export async function signIn(email: string, password: string) {
+  if (!supabase) {
+    return { data: null, error: { message: 'Supabase is not configured' } }
+  }
+  return await supabase.auth.signInWithPassword({ email, password })
+}
+
+/**
+ * Sign out the current user
+ */
+export async function signOut() {
+  if (!supabase) return
+  return await supabase.auth.signOut()
+}
+
+/**
+ * Get the current authenticated user
+ */
+export async function getCurrentUser() {
+  if (!supabase) return null
+  const { data: { user } } = await supabase.auth.getUser()
+  return user
+}
+
+/**
+ * Listen to auth state changes
+ */
+export function onAuthStateChange(callback: (event: string, session: any) => void) {
+  if (!supabase) return null
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(callback)
+  return subscription
+}
